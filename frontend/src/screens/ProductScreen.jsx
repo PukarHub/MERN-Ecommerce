@@ -1,24 +1,30 @@
-import React, {useState, useEffect} from 'react'
+import React, { useEffect} from 'react'
 import {Link} from 'react-router-dom'
 import {Row, Col, Image, ListGroup, Card, Button, ListGroupItem} from 'react-bootstrap'
 import Rating from '../components/Rating'
-import axios from 'axios'
+import {useDispatch, useSelector} from 'react-redux'
+import {listProductDetails} from '../actions/productActions'
 
-const ProductScreen = ({match}) => {
-    const [product, setProduct] = useState({})
+const ProductScreen = ({match, history}) => {
+    const dispatch = useDispatch()
+
+    const productDetails = useSelector(state => state.productDetails)
+    const {loading, error, product} = productDetails
     
     useEffect(() => {
-        const fetchProducts = async () => {
-            const {data} = await axios.get(`/api/products/${match.params.id}`)
+      dispatch(listProductDetails(match.params.id))
+    }, [dispatch, match])
 
-            setProduct(data)
-        }
+    const addToCartHandler = () => {
+   history.push(`/cart/${match.params.id}`)
+    }
 
-        fetchProducts()
-    }, [match])
+    
     return (
         <>
             <Link className='btn btn-dark my-3' to='/'>Go Back</Link>
+    {loading? <h2>Loading...</h2> : error? <h3>{error}</h3> : 
+    
         <Row>
             <Col md={6}>
                 <Image src={product.image} alr={product.name} fluid />
@@ -59,12 +65,13 @@ const ProductScreen = ({match}) => {
                           </Row>
                         </ListGroupItem>
                         <ListGroupItem>
-                            <Button className='btn-block' types='button' disabled={product.countInStock === 0}>Add To Cart</Button>
+                            <Button onClick={addToCartHandler} className='btn-block' types='button' disabled={product.countInStock === 0}>Add To Cart</Button>
                         </ListGroupItem>
                     </ListGroup>
                 </Card>
             </Col>
         </Row>
+    }
         </>
     )
 }
